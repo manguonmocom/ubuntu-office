@@ -3,10 +3,13 @@
 #
 #   ./install.sh [--lang vi] [--apps world,excel,pdf,slide] [--source DIR]
 #
+# Setup AppImage chỉ chứa wizard (~1MB). App người dùng chọn được tải
+# từ GitHub Releases (chỉ các app trong --apps), không bundle sẵn.
+#
 # Nguồn AppImage (ưu tiên):
 #   1) --source / UBU_OFFICE_SOURCE
 #   2) sibling ../releases/ubu (dev monorepo)
-#   3) GitHub Releases manguonmocom/ubuntu-office (API + curl)
+#   3) GitHub Releases manguonmocom/ubuntu-office (API + curl) — chỉ SELECTED
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -150,12 +153,85 @@ find_src() {
     local id="${ID[$key]}"
     local ic="$CACHE/icons/${id}.png"
     [[ -f "$ic" && -s "$ic" ]] && continue
-    # Best-effort icons (optional)
-    curl -fsSL -o "$ic" "https://raw.githubusercontent.com/${REPO}/main/images/apps/${id##*.}-256.png" 2>/dev/null \
-      || curl -fsSL -o "$ic" "https://raw.githubusercontent.com/${REPO}/main/images/apps/ubu-${key}-256.png" 2>/dev/null \
-      || rm -f "$ic"
+    # Repo ships images/apps/ubu-{world,excel,pdf,slide}-256.png
+    if curl -fsSL -o "$ic.partial" \
+         "https://raw.githubusercontent.com/${REPO}/main/images/apps/ubu-${key}-256.png" 2>/dev/null \
+       || curl -fsSL -o "$ic.partial" \
+         "https://raw.githubusercontent.com/${REPO}/main/images/apps/${id##*.}-256.png" 2>/dev/null; then
+      mv -f "$ic.partial" "$ic"
+    else
+      rm -f "$ic.partial" "$ic"
+    fi
   done
   printf '%s\n' "$CACHE"
+}
+
+# Ensure user hicolor theme is usable (GNOME needs index.theme + cache).
+ensure_hicolor_theme() {
+  local base=$1
+  mkdir -p "$base"
+  if [[ ! -f "$base/index.theme" ]]; then
+    cat >"$base/index.theme" <<'EOF'
+[Icon Theme]
+Name=Hicolor
+Comment=Local fallback icon theme
+Directories=48x48/apps,128x128/apps,256x256/apps
+
+[48x48/apps]
+Size=48
+Context=Applications
+Type=Threshold
+
+[128x128/apps]
+Size=128
+Context=Applications
+Type=Threshold
+
+[256x256/apps]
+Size=256
+Context=Applications
+Type=Threshold
+EOF
+  fi
+}
+
+# Install PNG into hicolor sizes; print absolute path to 256px icon (stdout).
+install_app_icon() {
+  local id=$1 key=$2
+  local src="" size dir dest
+  for cand in \
+    "$SRC_DIR/icons/${id}.png" \
+    "$SRC_DIR/icons/ubu-${key}-256.png" \
+    "$CACHE/icons/${id}.png"
+  do
+    if [[ -f "$cand" && -s "$cand" ]]; then src="$cand"; break; fi
+  done
+  # Last resort: fetch from GitHub even when AppImages came from --source
+  if [[ -z "$src" ]]; then
+    mkdir -p "$CACHE/icons"
+    local ic="$CACHE/icons/${id}.png"
+    if curl -fsSL -o "$ic.partial" \
+         "https://raw.githubusercontent.com/${REPO}/main/images/apps/ubu-${key}-256.png" 2>/dev/null; then
+      mv -f "$ic.partial" "$ic"
+      src="$ic"
+    else
+      rm -f "$ic.partial"
+    fi
+  fi
+  [[ -n "$src" ]] || { printf '\n'; return 0; }
+
+  ensure_hicolor_theme "$DEST_ICON"
+  for size in 48 128 256; do
+    dir="$DEST_ICON/${size}x${size}/apps"
+    mkdir -p "$dir"
+    dest="$dir/${id}.png"
+    if command -v convert >/dev/null 2>&1 && [[ "$size" -ne 256 ]]; then
+      convert "$src" -resize "${size}x${size}" "$dest" 2>/dev/null || install -m 644 "$src" "$dest"
+    else
+      install -m 644 "$src" "$dest"
+    fi
+  done
+  printf '%s\n' "$DEST_ICON/256x256/apps/${id}.png"
 }
 
 SRC_DIR="$(find_src)"
@@ -217,26 +293,25 @@ for key in "${SELECTED[@]}"; do
   fi
   install -m 755 "$ai" "$DEST_BIN/${app}.AppImage"
   ln -sfn "$DEST_BIN/${app}.AppImage" "$HOME/.local/bin/$app"
+
+  # Absolute Icon= path so GNOME shows the PNG even if icon theme cache lags.
+  icon_file="$(install_app_icon "$id" "$key")"
+  icon_field="$id"
+  [[ -n "$icon_file" && -f "$icon_file" ]] && icon_field="$icon_file"
+
   cat >"$DEST_APP/${id}.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=${name}
 Comment=${name} — Ubu Office (manguonmo.com)
 Exec=env UBU_OFFICE_LANG=${LANG_CODE} ${DEST_BIN}/${app}.AppImage %F
-Icon=${id}
+Icon=${icon_field}
 Terminal=false
 Categories=Office;
 StartupNotify=true
 StartupWMClass=${id}
 Keywords=ubu;office;manguonmo;
 EOF
-  if [[ -f "$SRC_DIR/icons/${id}.png" ]]; then
-    mkdir -p "$DEST_ICON/256x256/apps"
-    install -m 644 "$SRC_DIR/icons/${id}.png" "$DEST_ICON/256x256/apps/${id}.png"
-  elif [[ -f "$SRC_DIR/icons/ubu-${key}-256.png" ]]; then
-    mkdir -p "$DEST_ICON/256x256/apps"
-    install -m 644 "$SRC_DIR/icons/ubu-${key}-256.png" "$DEST_ICON/256x256/apps/${id}.png"
-  fi
   write_lang_pref "$key"
   say "  ✓ $name"
   installed=$((installed + 1))
@@ -244,6 +319,13 @@ done
 
 [[ "$installed" -gt 0 ]] || die "Không cài được app nào."
 update-desktop-database "$DEST_APP" 2>/dev/null || true
+if [[ -f "$DEST_ICON/index.theme" ]]; then
+  gtk-update-icon-cache -f -t "$DEST_ICON" 2>/dev/null || true
+fi
+# Nudge GNOME / desktop shells to rescan .desktop + icons
+if command -v xdg-desktop-menu >/dev/null 2>&1; then
+  xdg-desktop-menu forceupdate 2>/dev/null || true
+fi
 say "Hoàn tất: đã cài $installed app — ngôn ngữ mặc định: $LANG_CODE"
 say "Menu ứng dụng + ~/.local/bin/Ubu-{World,Excel,Pdf,Slide}"
 exit 0
