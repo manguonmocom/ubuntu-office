@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Ubu Office Setup
+Name[vi]=Cài đặt Ubu Office
+Comment=Install Ubu World, Excel, Pdf, Slide — choose language and components
+Comment[vi]=Cài Ubu World, Excel, Pdf, Slide — chọn ngôn ngữ và thành phần
+Exec=ubu-office-setup
+Icon=com.manguonmo.ubu-office
+Terminal=false
+Categories=Office;Settings;
+StartupNotify=true
+Keywords=ubu;office;setup;install;manguonmo;
