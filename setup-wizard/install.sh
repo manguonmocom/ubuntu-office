@@ -252,21 +252,54 @@ write_lang_pref() {
   local dir="${XDG_CONFIG_HOME:-$HOME/.config}/$cfg_name"
   mkdir -p "$dir"
   local ui="$dir/ui.json"
-  if [[ -f "$ui" ]] && command -v python3 >/dev/null; then
+  # Per-app ui.json (World / Excel / Slide). PdfCraft primarily uses app.ron — patched below.
+  if command -v python3 >/dev/null; then
     python3 - "$ui" "$LANG_CODE" <<'PY'
-import json,sys
-path, lang = sys.argv[1], sys.argv[2]
-try:
-    data = json.load(open(path, encoding="utf-8"))
-except Exception:
-    data = {}
+import json, sys
+from pathlib import Path
+path, lang = Path(sys.argv[1]), sys.argv[2]
+data = {}
+if path.is_file():
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        data = {}
 if not isinstance(data, dict):
     data = {}
 data["language"] = lang
-json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 PY
   else
     printf '{\n  "language": "%s"\n}\n' "$LANG_CODE" >"$ui"
+  fi
+
+  # PdfCraft persists language inside eframe's app.ron (JSON keys + RON egui/window blobs).
+  # Patch the escaped \"language\":\"…\" inside the pdfcraft string without parsing RON.
+  if [[ "$cfg_name" == "pdfcraft" ]] && command -v python3 >/dev/null; then
+    python3 - "$dir/app.ron" "$LANG_CODE" <<'PY'
+import re, sys
+from pathlib import Path
+path, lang = Path(sys.argv[1]), sys.argv[2]
+if not path.is_file():
+    raise SystemExit(0)
+text = path.read_text(encoding="utf-8")
+new, n = re.subn(
+    r'\\"language\\":\\"[^"\\]*\\"',
+    f'\\\\"language\\\\":\\\\"{lang}\\\\"',
+    text,
+    count=1,
+)
+if n == 0:
+    # No language field yet: insert as first key of the pdfcraft JSON object.
+    new, n = re.subn(
+        r'("pdfcraft"\s*:\s*")\{',
+        rf'\1{{\\"language\\":\\"{lang}\\",',
+        text,
+        count=1,
+    )
+if n:
+    path.write_text(new, encoding="utf-8")
+PY
   fi
 }
 
