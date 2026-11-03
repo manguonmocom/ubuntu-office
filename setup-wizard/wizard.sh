@@ -1,27 +1,30 @@
 #!/usr/bin/env bash
-# Ubu Office Setup Wizard — pure bash + zenity (no Python required).
-# Used by the Setup AppImage and as a fallback when python3-gi is missing.
+# Ubu Office Setup Wizard — bash + zenity (no Python/GTK bindings required).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 INSTALL="$HERE/install.sh"
-[[ -x "$INSTALL" ]] || INSTALL="bash $HERE/install.sh"
 
 die() { printf '%s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 if ! have zenity; then
-  die "Cần zenity (sudo apt install zenity) — hoặc dùng bản Python: python3 setup-wizard.py"
+  die "Cần zenity: sudo apt install zenity"
 fi
 
+# Plain text (zenity 4 / libadwaita is picky about markup).
 zenity --info --width=480 --title="Ubu Office Setup" \
-  --text="<b>Ubu Office</b>\nBộ ứng dụng văn phòng cho Ubuntu\n(World · Excel · Pdf · Slide)\n\nTiếp theo: chọn ngôn ngữ và thành phần cần cài." \
+  --text="Ubu Office — bộ ứng dụng văn phòng cho Ubuntu
+(World · Excel · Pdf · Slide)
+
+Tiếp theo: chọn ngôn ngữ và thành phần cần cài." \
   || true
 
-# Language (default Vietnamese)
-LANG_PICK="$(zenity --list --radiolist --title="Ubu Office — Ngôn ngữ" --width=420 --height=420 \
-  --text="Ngôn ngữ giao diện mặc định:" \
-  --column="" --column="Ngôn ngữ" --column="Mã" \
+LANG_PICK="$(zenity --list --radiolist \
+  --title="Ubu Office — Ngôn ngữ" \
+  --width=420 --height=420 \
+  --text="Ngôn ngữ giao diện lần đầu (app mặc định English nếu bỏ qua Setup):" \
+  --column="Chọn" --column="Ngôn ngữ" --column="Mã" \
   TRUE "Tiếng Việt" vi \
   FALSE "English" en \
   FALSE "中文" zh \
@@ -32,45 +35,74 @@ LANG_PICK="$(zenity --list --radiolist --title="Ubu Office — Ngôn ngữ" --wi
   FALSE "Español" es \
   FALSE "Português" pt \
   FALSE "Русский" ru \
-  --print-column=3)" || exit 1
+  --hide-column=3 --print-column=3)" || exit 1
 LANG_CODE="${LANG_PICK:-vi}"
 
-# Apps (default all checked)
-APP_PICK="$(zenity --list --checklist --title="Ubu Office — Thành phần" --width=520 --height=360 \
+APP_PICK="$(zenity --list --checklist \
+  --title="Ubu Office — Thành phần" \
+  --width=520 --height=360 \
   --text="Chọn ứng dụng cần cài (mặc định: tất cả):" \
-  --column="" --column="Ứng dụng" --column="Mã" \
+  --column="Cài" --column="Ứng dụng" --column="Mã" \
   TRUE "Ubu World — Soạn thảo" world \
   TRUE "Ubu Excel — Bảng tính" excel \
   TRUE "Ubu Pdf — PDF" pdf \
   TRUE "Ubu Slide — Trình chiếu" slide \
-  --print-column=3 --separator=',')" || exit 1
-[[ -n "$APP_PICK" ]] || die "Chưa chọn ứng dụng nào."
+  --hide-column=3 --print-column=3 --separator=',')" || exit 1
+[[ -n "${APP_PICK:-}" ]] || die "Chưa chọn ứng dụng nào."
 
 zenity --question --width=440 --title="Ubu Office Setup" \
-  --text="Cài đặt với:\n• Ngôn ngữ: <b>$LANG_CODE</b>\n• Apps: <b>$APP_PICK</b>\n\nTiếp tục?" \
+  --text="Cài đặt với:
+• Ngôn ngữ: ${LANG_CODE}
+• Apps: ${APP_PICK}
+
+Tiếp tục?" \
   || exit 1
 
 LOG="$(mktemp /tmp/ubu-office-setup.XXXXXX.log)"
 (
   echo "==> Ubu Office Setup"
   echo "lang=$LANG_CODE apps=$APP_PICK"
-  # Prefer bundled/local packages next to this script's parent releases/
   SRC_ARGS=()
   if [[ -d "$HERE/../releases/ubu/appimage" ]]; then
     SRC_ARGS=(--source "$HERE/../releases/ubu")
-  elif [[ -d "$HERE/releases/ubu/appimage" ]]; then
-    SRC_ARGS=(--source "$HERE/releases/ubu")
+  elif [[ -d "$HERE/packages/appimage" ]]; then
+    SRC_ARGS=(--source "$HERE/packages")
   fi
-  # shellcheck disable=SC2086
-  bash "$HERE/install.sh" --lang "$LANG_CODE" --apps "$APP_PICK" "${SRC_ARGS[@]}"
-) 2>&1 | tee "$LOG" | zenity --progress --pulsate --auto-close --width=480 \
-  --title="Ubu Office — Đang cài" --text="Đang tải / cài đặt…" || true
+  bash "$INSTALL" --lang "$LANG_CODE" --apps "$APP_PICK" "${SRC_ARGS[@]}"
+) >"$LOG" 2>&1 &
+PID=$!
 
-if grep -q 'Hoàn tất' "$LOG"; then
-  zenity --info --width=440 --title="Ubu Office" \
-    --text="<b>Cài đặt xong.</b>\nNgôn ngữ: $LANG_CODE\n\nMở menu ứng dụng và chạy Ubu World / Excel / Pdf / Slide.\n\nNhật ký: $LOG"
-else
-  zenity --error --width=480 --title="Ubu Office" \
-    --text="Cài đặt chưa hoàn tất. Xem log:\n$LOG\n\n$(tail -20 "$LOG" | sed 's/&/\&amp;/g')"
-  exit 1
+# Progress UI (do not fail the install if zenity progress is closed early).
+(
+  while kill -0 "$PID" 2>/dev/null; do
+    echo "# Đang tải / cài đặt…"
+    sleep 0.4
+  done
+) | zenity --progress --pulsate --auto-close --no-cancel --width=480 \
+  --title="Ubu Office — Đang cài" --text="Đang tải / cài đặt…" 2>/dev/null || true
+
+wait "$PID" || true
+RC=0
+if ! grep -q 'Hoàn tất' "$LOG"; then
+  RC=1
 fi
+
+if [[ "$RC" -eq 0 ]]; then
+  zenity --info --width=440 --title="Ubu Office" \
+    --text="Cài đặt xong.
+Ngôn ngữ: ${LANG_CODE}
+
+Mở menu ứng dụng → Ubu World / Excel / Pdf / Slide.
+
+Nhật ký: ${LOG}" || true
+  exit 0
+fi
+
+DETAIL="$(tail -25 "$LOG" | sed 's/&/\&amp;/g; s/</\&lt;/g')"
+zenity --error --width=520 --title="Ubu Office" \
+  --text="Cài đặt chưa hoàn tất.
+
+Log: ${LOG}
+
+${DETAIL}" || true
+exit 1

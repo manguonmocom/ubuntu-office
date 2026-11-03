@@ -2,6 +2,14 @@
 
 > [🇬🇧 USER GUIDE (EN)](GUIDE.md) · [README](README.md) · [⬇ Tải Release](https://github.com/manguonmocom/ubuntu-office/releases/latest)
 
+## ⬇ Tải Setup (1 click — khuyến nghị cho người mới)
+
+**[Ubu-Office-Setup-0.1.0-x86_64.AppImage](https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage)**
+
+Sau khi tải: chuột phải → **Thuộc tính** → bật **Cho phép chạy như chương trình** → nhấp đúp → chọn ngôn ngữ → tick app → **Install**.
+
+---
+
 **Ubu Office** là bộ ứng dụng văn phòng **miễn phí, mã nguồn mở** cho Ubuntu/Linux:
 
 | Ứng dụng | Việc chính | Định dạng |
@@ -23,19 +31,19 @@ Không cần Python. Chỉ cần Ubuntu Desktop (có `zenity`).
 
 ### Bước từng bước
 
-1. Mở [Release mới nhất](https://github.com/manguonmocom/ubuntu-office/releases/latest).
-2. Tải **`Ubu-Office-Setup-0.1.0-x86_64.AppImage`** (hoặc bản Setup mới hơn).
-3. Chuột phải file → **Properties / Thuộc tính** → bật **Allow executing file as program** / **Cho phép chạy như chương trình**.  
+1. Tải trực tiếp: **[Ubu-Office-Setup-0.1.0-x86_64.AppImage](https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage)**  
+   (hoặc mở [Release mới nhất](https://github.com/manguonmocom/ubuntu-office/releases/latest)).
+2. Chuột phải file → **Properties / Thuộc tính** → bật **Allow executing file as program** / **Cho phép chạy như chương trình**.  
    Hoặc Terminal:
 
    ```bash
    chmod +x Ubu-Office-Setup-*-x86_64.AppImage
    ```
 
-4. **Nhấp đúp** file Setup (hoặc `./Ubu-Office-Setup-*-x86_64.AppImage`).
-5. Chọn **ngôn ngữ giao diện** (mặc định: Tiếng Việt).
-6. Tick ứng dụng cần cài (mặc định: **cả 4**).
-7. Xác nhận — Setup tải/cài AppImage, tạo shortcut menu, ghi `~/.config/ubu-office/language`.
+3. **Nhấp đúp** file Setup (hoặc `./Ubu-Office-Setup-*-x86_64.AppImage`).
+4. Chọn **ngôn ngữ giao diện** (mặc định: Tiếng Việt).
+5. Tick ứng dụng cần cài (mặc định: **cả 4**).
+6. Xác nhận — Setup tải/cài AppImage, tạo shortcut menu, ghi `~/.config/ubu-office/language`.
 
 Sau đó mở **Ubu World / Excel / Pdf / Slide** từ menu ứng dụng.
 

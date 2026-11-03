@@ -2,6 +2,14 @@
 
 > [🇻🇳 Hướng Dẫn (VI)](HUONG-DAN.md) · [README](README.md) · [⬇ Releases](https://github.com/manguonmocom/ubuntu-office/releases/latest)
 
+## ⬇ Download Setup (1 click — easiest for beginners)
+
+**[Ubu-Office-Setup-0.1.0-x86_64.AppImage](https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage)**
+
+After download: right-click → **Properties** → enable **Allow executing file as program** → double-click → choose language → tick apps → **Install**.
+
+---
+
 **Ubu Office** is a free, open-source office suite for Ubuntu and other Linux desktops:
 
 | App | Purpose | Formats |
@@ -23,19 +31,19 @@ No Python required. Needs Ubuntu Desktop `zenity` (usually preinstalled).
 
 ### Steps
 
-1. Open the [latest Release](https://github.com/manguonmocom/ubuntu-office/releases/latest).
-2. Download **`Ubu-Office-Setup-*-x86_64.AppImage`**.
-3. Right-click → **Properties** → enable **“Allow executing file as program”**.  
+1. Direct download: **[Ubu-Office-Setup-0.1.0-x86_64.AppImage](https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage)**  
+   (or open the [latest Release](https://github.com/manguonmocom/ubuntu-office/releases/latest)).
+2. Right-click → **Properties** → enable **“Allow executing file as program”**.  
    Or:
 
    ```bash
    chmod +x Ubu-Office-Setup-*-x86_64.AppImage
    ```
 
-4. Double-click the Setup AppImage (or run it from a terminal).
-5. Choose **UI language** (wizard default: Vietnamese).
-6. Tick apps to install (default: **all four**).
-7. Confirm — the wizard downloads/installs AppImages, creates menu shortcuts, and writes `~/.config/ubu-office/language`.
+3. Double-click the Setup AppImage (or run it from a terminal).
+4. Choose **UI language** (wizard default: Vietnamese).
+5. Tick apps to install (default: **all four**).
+6. Confirm — the wizard downloads/installs AppImages, creates menu shortcuts, and writes `~/.config/ubu-office/language`.
 
 Then launch **Ubu World / Excel / Pdf / Slide** from the app menu.
 
@@ -130,13 +138,13 @@ rm -f ~/.config/wordcraft/ui.json \
 
 ## Screenshots
 
-![Ubu World](images/ubu-world.jpg)
+![Ubu World](images/screenshots/ubu-world.jpg)
 
-![Ubu Excel](images/ubu-excel.jpg)
+![Ubu Excel](images/screenshots/ubu-excel.jpg)
 
-![Ubu Slide](images/ubu-slide.jpg)
+![Ubu Slide](images/screenshots/ubu-slide.jpg)
 
-![Ubu Pdf](images/ubu-pdf.jpg)
+![Ubu Pdf](images/screenshots/ubu-pdf.jpg)
 
 ---
 

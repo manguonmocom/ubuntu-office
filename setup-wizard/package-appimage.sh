@@ -15,8 +15,7 @@ trap cleanup EXIT
 mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/ubu-office-setup"
 install -m 755 "$HERE/install.sh" "$APPDIR/usr/share/ubu-office-setup/install.sh"
 install -m 755 "$HERE/wizard.sh" "$APPDIR/usr/share/ubu-office-setup/wizard.sh"
-# Optional: ship local AppImages inside Setup when building a fat installer
-# (default: download from GitHub Releases at install time).
+install -m 755 "$HERE/AppRun" "$APPDIR/AppRun"
 
 ICON_SRC="$ROOT/releases/ubu/icons/com.manguonmo.ubu-office.png"
 [[ -f "$ICON_SRC" ]] || ICON_SRC="$ROOT/branding/icons/ubu-office.png"
@@ -39,29 +38,6 @@ Categories=Office;Settings;
 Terminal=false
 StartupNotify=true
 EOF
-cp "$APPDIR/ubu-office-setup.desktop" "$APPDIR/usr/share/ubu-office-setup/" 2>/dev/null || true
-
-cat >"$APPDIR/AppRun" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
-export PATH="$HERE/usr/bin:$PATH"
-# zenity is expected on the host (Ubuntu GNOME); show a clear message otherwise.
-if ! command -v zenity >/dev/null 2>&1; then
-  if command -v notify-send >/dev/null 2>&1; then
-    notify-send "Ubu Office Setup" "Cần gói zenity: sudo apt install zenity"
-  fi
-  echo "Cần zenity: sudo apt install zenity" >&2
-  # Still allow headless CLI install
-  if [[ "${1:-}" == "--cli" ]]; then
-    shift
-    exec bash "$HERE/usr/share/ubu-office-setup/install.sh" "$@"
-  fi
-  exit 1
-fi
-exec bash "$HERE/usr/share/ubu-office-setup/wizard.sh" "$@"
-EOF
-chmod +x "$APPDIR/AppRun"
 ln -sfn usr/share/ubu-office-setup/wizard.sh "$APPDIR/usr/bin/ubu-office-setup"
 
 # Locate appimagetool

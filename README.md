@@ -15,7 +15,17 @@
   &nbsp;·&nbsp;
   <a href="GUIDE.md"><b>🇬🇧 USER GUIDE (EN)</b></a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/manguonmocom/ubuntu-office/releases/latest"><b>⬇ Download</b></a>
+  <a href="https://github.com/manguonmocom/ubuntu-office/releases/latest"><b>⬇ Releases</b></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage"><img alt="Download Setup AppImage" src="https://img.shields.io/badge/⬇_Download_Setup-Ubu--Office--Setup--0.1.0--x86__64.AppImage-brightgreen?style=for-the-badge" /></a>
+</p>
+
+<p align="center">
+  <b><a href="https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage">⬇ Tải Setup AppImage (1 click)</a></b>
+  — rồi Properties → Allow running as a program → double-click → Install<br/>
+  <sub>No Python required · picks language + apps · see <a href="HUONG-DAN.md">HUONG-DAN.md</a> / <a href="GUIDE.md">GUIDE.md</a></sub>
 </p>
 
 <p align="center">
@@ -57,11 +67,11 @@
 
 ### Easiest — Setup AppImage (recommended)
 
-1. Download **`Ubu-Office-Setup-*-x86_64.AppImage`** from [Releases](https://github.com/manguonmocom/ubuntu-office/releases/latest).
+1. **[Download Ubu-Office-Setup-0.1.0-x86_64.AppImage](https://github.com/manguonmocom/ubuntu-office/releases/download/v0.1.0/Ubu-Office-Setup-0.1.0-x86_64.AppImage)** (direct link).
 2. Right-click → **Properties** → enable **“Allow running as a program”** (or `chmod +x` that file).
 3. Double-click → pick **language** (default: **Tiếng Việt**) → tick apps (default: **all four**) → Install.
 
-No Python required (uses `zenity`, already on Ubuntu Desktop). The wizard can also download the four app AppImages for you.
+No Python required for the wizard GUI (uses `zenity`, already on Ubuntu Desktop). The wizard downloads the four app AppImages for you.
 
 ### Bash Setup (no GUI)
 

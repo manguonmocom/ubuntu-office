@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# AppImage entry — GUI wizard, or: Ubu-Office-Setup.AppImage --cli [install.sh args…]
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+export PATH="$HERE/usr/bin:${PATH:-/usr/bin}"
+
+INSTALL="$HERE/usr/share/ubu-office-setup/install.sh"
+WIZARD="$HERE/usr/share/ubu-office-setup/wizard.sh"
+
+if [[ "${1:-}" == "--cli" || "${1:-}" == "--install" ]]; then
+  shift
+  exec bash "$INSTALL" "$@"
+fi
+
+if ! command -v zenity >/dev/null 2>&1; then
+  echo "Cần zenity: sudo apt install zenity" >&2
+  echo "Hoặc cài CLI: $0 --cli --lang vi --apps world,excel,pdf,slide" >&2
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Ubu Office Setup" "Cần gói zenity: sudo apt install zenity"
+  fi
+  exit 1
+fi
+
+exec bash "$WIZARD" "$@"
