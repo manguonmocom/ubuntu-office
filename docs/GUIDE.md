@@ -11,36 +11,96 @@
 | **Ubu Slide** | Presentations | `.pptx` |
 | **Ubu Pdf** | PDF reader / editor | `.pdf` |
 
-Apps default to **English**. The **Setup Wizard** can set Vietnamese (or another language) for first launch; change anytime later in Options. Your files stay on your computer — no cloud account required.
+- Apps **default to English**.
+- The **Setup Wizard** can set Vietnamese (or another language) for first launch.
+- Files stay on your computer — no cloud account required.
 
 ---
 
-## Option 1 — Setup AppImage (easiest)
+## Option 1 — Setup Wizard AppImage (recommended)
+
+No Python required. Needs Ubuntu Desktop `zenity` (usually preinstalled).
+
+### Steps
 
 1. Open the [latest Release](https://github.com/manguonmocom/ubuntu-office/releases/latest).
-2. Download **`Ubu-Office-Setup-…-x86_64.AppImage`**.
-3. Right-click → **Properties** → enable **“Allow executing file as program”**.
-4. Double-click the AppImage.
-5. Choose **language** (default: Vietnamese).
-6. Tick the apps to install (default: **all four**).
-7. Confirm — shortcuts appear in your app menu.
+2. Download **`Ubu-Office-Setup-*-x86_64.AppImage`**.
+3. Right-click → **Properties** → enable **“Allow executing file as program”**.  
+   Or:
 
-Requires `zenity` (usually preinstalled on Ubuntu Desktop). If missing: `sudo apt install zenity`.
+   ```bash
+   chmod +x Ubu-Office-Setup-*-x86_64.AppImage
+   ```
+
+4. Double-click the Setup AppImage (or run it from a terminal).
+5. Choose **UI language** (wizard default: Vietnamese).
+6. Tick apps to install (default: **all four**).
+7. Confirm — the wizard downloads/installs AppImages, creates menu shortcuts, and writes `~/.config/ubu-office/language`.
+
+Then launch **Ubu World / Excel / Pdf / Slide** from the app menu.
+
+> Missing zenity? `sudo apt install zenity`
 
 ---
 
-## Option 2 — Per-app AppImage
+## Option 2 — Bash (CLI), no GUI
 
-Download `Ubu-World`, `Ubu-Excel`, `Ubu-Slide`, and/or `Ubu-Pdf` AppImages, mark each executable, then double-click.
+```bash
+git clone https://github.com/manguonmocom/ubuntu-office.git
+cd ubuntu-office/setup-wizard
+
+# All four apps, Vietnamese first-run language
+./install.sh --lang vi --apps world,excel,pdf,slide
+
+# World + Excel only, English
+./install.sh --lang en --apps world,excel
+
+# Use already-downloaded packages
+./install.sh --lang vi --apps world,excel,pdf,slide --source /path/to/releases/ubu
+```
+
+Interactive zenity wizard:
+
+```bash
+./wizard.sh
+```
+
+| Variable | Meaning |
+|----------|---------|
+| `UBU_OFFICE_LANG` | Language code (`vi`, `en`, …) |
+| `UBU_OFFICE_APPS` | `world,excel,pdf,slide` |
+| `UBU_OFFICE_SOURCE` | Folder containing `appimage/` |
+
+The installer writes:
+
+- `~/.config/ubu-office/language` — suite language (used on first run if an app has no own prefs)
+- `~/.local/share/ubu-office/bin/Ubu-*.AppImage`
+- desktop entries under `~/.local/share/applications/`
+- symlinks in `~/.local/bin/`
+
+---
+
+## Option 3 — Per-app AppImage (manual)
+
+Download each `Ubu-*-x86_64.AppImage`, mark executable, double-click.
 
 ```bash
 chmod +x Ubu-World-*-x86_64.AppImage
 ./Ubu-World-*-x86_64.AppImage
 ```
 
+Force Vietnamese without the wizard:
+
+```bash
+mkdir -p ~/.config/ubu-office
+echo vi > ~/.config/ubu-office/language
+# or:
+UBU_OFFICE_LANG=vi ./Ubu-World-*-x86_64.AppImage
+```
+
 ---
 
-## Option 3 — `.deb` packages
+## Option 4 — `.deb` packages
 
 ```bash
 sudo apt install ./Ubu-World_*_amd64.deb
@@ -53,16 +113,18 @@ Commands: `ubu-world`, `ubu-excel`, `ubu-slide`, `ubu-pdf`.
 
 ---
 
-## Language after install
+## Change language later
 
-- **World / Excel / Pdf:** Options / Preferences → **Interface language**.
-- To reset a sticky English preference after upgrading:
+- In-app: **Options / Preferences → Interface language**.
+- Reset per-app prefs (suite file still applies on next first-run style load):
 
 ```bash
-rm -f ~/.config/wordcraft/ui.json ~/.config/gridcraft/ui.json ~/.config/pdfcraft/ui.json
+rm -f ~/.config/wordcraft/ui.json \
+      ~/.config/gridcraft/ui.json \
+      ~/.config/pdfcraft/ui.json
 ```
 
-> **Ubu Slide:** UI is currently English-only (upstream has no full UI translation catalogs yet). World, Excel, and Pdf ship with Vietnamese.
+> **Ubu Slide:** UI is currently English-only (no full upstream UI catalogs yet). World, Excel, and Pdf support Vietnamese.
 
 ---
 
@@ -80,15 +142,19 @@ rm -f ~/.config/wordcraft/ui.json ~/.config/gridcraft/ui.json ~/.config/pdfcraft
 
 ## Tips
 
-- Install Vulkan drivers: `sudo apt install mesa-vulkan-drivers`
+- Vulkan: `sudo apt install mesa-vulkan-drivers`
 - Blank window: `WGPU_BACKEND=gl ./Ubu-World-*.AppImage`
 - Never run AppImages with `sudo`
-- Verify downloads with `checksums.sha256`
+- Verify with `checksums.sha256` in the Release
 
 ## Uninstall
 
-- AppImage / Setup: delete the files and `~/.local/share/applications/com.manguonmo.ubu-*.desktop`
-- `.deb`: `sudo apt remove ubu-world ubu-excel ubu-slide ubu-pdf`
+```bash
+rm -f ~/.local/share/ubu-office/bin/Ubu-*.AppImage
+rm -f ~/.local/share/applications/com.manguonmo.ubu-*.desktop
+rm -f ~/.local/bin/Ubu-{World,Excel,Pdf,Slide}
+sudo apt remove ubu-world ubu-excel ubu-slide ubu-pdf   # if you used .deb
+```
 
 ## Support
 

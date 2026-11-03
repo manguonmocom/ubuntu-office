@@ -63,18 +63,19 @@
 
 No Python required (uses `zenity`, already on Ubuntu Desktop). The wizard can also download the four app AppImages for you.
 
-### Or install each app yourself
-
-**AppImage (no root):**
+### Bash Setup (no GUI)
 
 ```bash
-chmod +x Ubu-World-*-x86_64.AppImage
-./Ubu-World-*-x86_64.AppImage
+git clone https://github.com/manguonmocom/ubuntu-office.git
+cd ubuntu-office/setup-wizard
+./install.sh --lang vi --apps world,excel,pdf,slide
 ```
 
-**`.deb` (system menu + `ubu-world` commands):**
+### Per-app AppImage / `.deb`
 
 ```bash
+chmod +x Ubu-World-*-x86_64.AppImage && ./Ubu-World-*-x86_64.AppImage
+
 sudo apt install ./Ubu-World_*_amd64.deb ./Ubu-Excel_*_amd64.deb \
   ./Ubu-Slide_*_amd64.deb ./Ubu-Pdf_*_amd64.deb
 ```
